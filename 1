@@ -1,0 +1,39 @@
+const express = require('express');
+const fs = require('fs');
+const AdmZip = require('adm-zip');
+
+const app = express();
+
+app.get('/api/zipfiles', (req, res) => {
+    let zipFiles = [];
+    fs.readdirSync('path/to/zip/files/').forEach(file => {
+        if (file.endsWith('.zip')) {
+            let zip = new AdmZip(`path/to/zip/files/${file}`);
+            let zipEntries = zip.getEntries();
+            let exeFile = '';
+            let descFile = '';
+            let shDescFile = '';
+            zipEntries.forEach(entry => {
+                if (entry.entryName.endsWith('.exe')) {
+                    exeFile = entry.entryName;
+                }
+                if (entry.entryName === 'desc.txt') {
+                    descFile = zip.readAsText(entry);
+                }
+                if (entry.entryName === 'sh_desc.txt') {
+                    shDescFile = zip.readAsText(entry);
+                }
+            });
+            zipFiles.push({
+                exeFile: exeFile,
+                descFile: descFile,
+                shDescFile: shDescFile
+            });
+        }
+    });
+    res.json(zipFiles);
+});
+
+app.listen(3000, () => {
+    console.log('Server running on port 3000');
+});
